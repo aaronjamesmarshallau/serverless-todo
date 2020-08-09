@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: budgie
+service: serverless-todo
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
@@ -23,51 +23,31 @@ service: budgie
 provider:
   name: aws
   runtime: dotnetcore3.1
-
-# you can overwrite defaults here
-#  stage: dev
   region: ap-southeast-2
-
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
-
-# you can define service wide environment variables here
-#  environment:
-#    variable1: value1
+  httpApi:
+    name: 'budgie-http-api'
+    cors: true
 
 package:
   individually: true
 
 functions:
-  hello:
-    handler: CsharpHandlers::AwsDotnetCsharp.Handler::Hello
-
-    # you can add packaging information here
+  get_todos:
+    handler: CsharpHandlers::ServerlessTodo.Handlers.Todos::Get
     package:
       artifact: bin/Release/netcoreapp3.1/hello.zip
+    events:
+      - http:
+          path: api/todos
+          method: get
+
+    # you can add packaging information here
     #  exclude:
     #    - exclude-me.js
     #    - exclude-me-dir/**
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
 #      - websocket: $connect
 #      - s3: ${env:BUCKET}
 #      - schedule: rate(10 minutes)
