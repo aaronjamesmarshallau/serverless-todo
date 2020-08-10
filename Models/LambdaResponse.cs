@@ -36,6 +36,11 @@ namespace ServerlessTodo.Models
 			Body = body;
 			StatusCode = HttpStatusCode.OK;
 			IsBase64Encoded = false;
+			Headers = new Dictionary<string, string>
+			{
+				{ "Access-Control-Allow-Origin", "*" },
+				{ "Access-Control-Allow-Credentials", "true" },
+			};
 		}
 
 		public static LambdaResponse<T> Ok(T body) 

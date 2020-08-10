@@ -36,8 +36,9 @@ functions:
       - http:
           path: api/todos
           method: get
+          cors: true
 
 custom:
   client:
-    bucketName: serveless-todo-static
+    bucketName: serverless-todo.i18u.me
     distributionFolder: /client/dist
