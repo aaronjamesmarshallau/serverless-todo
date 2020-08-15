@@ -1,7 +1,7 @@
 <template>
   <li class="todo-list-item">
     <div class="content-anchor">
-      <div class="check-box">
+      <div v-if="!hideCheckbox" class="check-box">
         <input type="checkbox" v-on:click="onCheckToggled" />
       </div>
       <div class="item-summary">
@@ -17,10 +17,16 @@
 </template>
 
 <script>
+import SimplePanel from '@/components/SimplePanel';
+
 export default {
   name: 'todo-list-item',
   props: {
     item: Object,
+    hideCheckbox: Boolean,
+  },
+  components: {
+    SimplePanel,
   },
   methods: {
     onCheckToggled(evt) {
@@ -46,15 +52,13 @@ export default {
   display: inline-block;
 }
 
-.todo-list-item:not(:last-of-type) {
+.todo-list-item:not(:last-of-type) > .simple-panel {
   border-bottom: 1px solid #ddd;
 }
 
 .todo-list-item {
-  position: relative;
   list-style: none;
   padding: 10px;
-  z-index: 1;
   text-align: left;
 }
 </style>

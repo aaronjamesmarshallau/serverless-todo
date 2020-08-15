@@ -22,7 +22,7 @@ namespace ServerlessTodo.Models
 			{
 				Summary = items.GetValueOrDefault("summary")?.S,
 				Description = items.GetValueOrDefault("description")?.S,
-				IsComplete = items.GetValueOrDefault("tags")?.BOOL ?? false,
+				IsComplete = items.GetValueOrDefault("isComplete")?.BOOL ?? false,
 			};
 		}
 	}

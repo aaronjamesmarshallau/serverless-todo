@@ -6,6 +6,10 @@ class Todos {
   get() {
     return this.client.get('/api/todos');
   }
+
+  create(item) {
+    return this.client.post('/api/todos', item);
+  }
 }
 
 export default Todos;

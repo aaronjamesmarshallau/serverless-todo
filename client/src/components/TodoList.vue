@@ -1,16 +1,20 @@
 <template>
   <ul class="todo-list">
-    <todo-list-item v-for="(item, index) in items" v-bind:key="index" :item="item" />
+    <simple-panel>
+      <todo-list-item v-for="(item, index) in items" v-bind:key="index" :item="item" />
+    </simple-panel>
   </ul>
 </template>
 
 <script>
 import TodoListItem from '@/components/TodoListItem';
+import SimplePanel from '@/components/SimplePanel';
 
 export default {
   name: 'todo-list',
   components: {
     TodoListItem,
+    SimplePanel,
   },
   props: {
     items: Array,
@@ -21,6 +25,5 @@ export default {
 <style scoped>
 .todo-list {
   padding: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
 }
 </style>
