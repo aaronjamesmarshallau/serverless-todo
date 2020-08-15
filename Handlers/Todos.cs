@@ -1,45 +1,57 @@
 
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Amazon;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DocumentModel;
+using Amazon.DynamoDBv2.Model;
 using ServerlessTodo.Models;
 
 namespace ServerlessTodo.Handlers 
 {
 	class Todos 
 	{
-		public LambdaResponse<Todo[]> Get() 
+		private static AmazonDynamoDBClient GetDynamoClient()
 		{
-			return LambdaResponse<Todo[]>.Ok(new [] 
+			var awsRegionRaw = Environment.GetEnvironmentVariable("AWS_REGION");
+			var dynamoConfig = new AmazonDynamoDBConfig()
 			{
-				new Todo
-				{
-					Summary = "Make to-do app",
-					Description = "Build a to-do app using the serverless/serverless framework",
-					Tags = new[] {
-						"spike",
-						"difficult"
-					},
-					IsComplete = false,
-				},
-				new Todo
-				{
-					Summary = "Cook dinner",
-					Description = "Cook some spaghetti bolognese",
-					Tags = new[] {
-						"life",
-						"easy"
-					},
-					IsComplete = false,
-				},
-				new Todo
-				{
-					Summary = "Do groceries",
-					Description = "Go to woolies and get:\n- Carrots\n- Potatoes\n- Mince Meat",
-					Tags = new[] {
-						"groceries",
-						"easy"
-					},
-					IsComplete = false,
-				}
-			});
+				RegionEndpoint = RegionEndpoint.GetBySystemName(awsRegionRaw),
+			};
+			
+			var client = new AmazonDynamoDBClient(dynamoConfig);
+			return client;
+		}
+
+		private static string GetTodoTableName() 
+		{
+			return Environment.GetEnvironmentVariable("TODO_TABLE_NAME");
+		}
+
+		private static Table GetTodoTable(AmazonDynamoDBClient client)
+		{
+			var tableNameRaw = GetTodoTableName();
+			var todoTable = Table.LoadTable(client, tableNameRaw);
+
+			return todoTable;
+		}
+
+		public async Task<LambdaResponse<Todo[]>> Get() 
+		{
+			var client = GetDynamoClient();
+			var todoTableName = GetTodoTableName();
+
+			var request = new ScanRequest
+			{
+				TableName = todoTableName,
+				Limit = 10,
+			};
+
+			var response = await client.ScanAsync(request);
+			var results = response.Items.Select(Todo.FromDynamo).ToArray();
+
+			return LambdaResponse<Todo[]>.Ok(results);
 		}
 	}
 }

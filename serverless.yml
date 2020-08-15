@@ -29,6 +29,7 @@ package:
 
 functions:
   get_todos:
+    role: ServerlessTodoDynamoRole
     handler: CsharpHandlers::ServerlessTodo.Handlers.Todos::Get
     package:
       artifact: bin/Release/netcoreapp3.1/hello.zip
@@ -37,8 +38,77 @@ functions:
           path: api/todos
           method: get
           cors: true
+    environment:
+      TODO_TABLE_NAME: "todos"
 
 custom:
   client:
     bucketName: serverless-todo.i18u.me
     distributionFolder: /client/dist
+
+resources:
+  Resources:
+    TodosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: todos
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+    ServerlessTodoDynamoRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: "ServerlessTodoDynamoRole"
+        Description: "Allows access to DynamoDB for the lambdas"
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - "lambda.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+    ServerlessTodoDynamoPolicy:
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: "ServerlessTodoDynamoPolicy"
+        Roles:
+          - "ServerlessTodoDynamoRole"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "dynamodb:BatchGetItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:Query"
+                - "dynamodb:Scan"
+                - "dynamodb:BatchWriteItem"
+                - "dynamodb:PutItem"
+                - "dynamodb:UpdateItem"
+              Resource: 
+                Fn::Join:
+                  - ':'
+                  -
+                    - 'arn:aws:dynamodb'
+                    - Ref: 'AWS::Region'
+                    - Ref: 'AWS::AccountId'
+                    - !Join ['/', ['table', !Select [1, !Split ['/', !GetAtt TodosTable.Arn]]]]
+            - Effect: "Allow"
+              Action:
+                - "logs:CreateLogGroup"
+                - "logs:CreateLogStream"
+                - "logs:PutLogEvents"
+              Resource:
+                - 'Fn::Join':
+                  - ':'
+                  -
+                    - 'arn:aws:logs'
+                    - Ref: 'AWS::Region'
+                    - Ref: 'AWS::AccountId'
+                    - 'log-group:/aws/lambda/*:*:*'
