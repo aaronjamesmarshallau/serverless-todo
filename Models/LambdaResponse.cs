@@ -48,5 +48,23 @@ namespace ServerlessTodo.Models
 			var response = new LambdaResponse<T>(body);
 			return response;
 		}
+
+		public static LambdaResponse<T> InternalServerError(T body) 
+		{
+			var response = new LambdaResponse<T>(body)
+			{
+				StatusCode = HttpStatusCode.InternalServerError,
+			};
+			return response;
+		}
+
+		public static LambdaResponse<T> BadRequest(T body) 
+		{
+			var response = new LambdaResponse<T>(body)
+			{
+				StatusCode = HttpStatusCode.BadRequest,
+			};
+			return response;
+		}
 	}
 }

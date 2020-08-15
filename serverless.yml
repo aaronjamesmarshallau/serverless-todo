@@ -40,6 +40,18 @@ functions:
           cors: true
     environment:
       TODO_TABLE_NAME: "todos"
+  create_todo:
+    role: ServerlessTodoDynamoRole
+    handler: CsharpHandlers::ServerlessTodo.Handlers.Todos::Create
+    package:
+      artifact: bin/Release/netcoreapp3.1/hello.zip
+    events:
+      - http:
+          path: api/todos
+          method: post
+          cors: true
+    environment:
+      TODO_TABLE_NAME: "todos"
 
 custom:
   client:

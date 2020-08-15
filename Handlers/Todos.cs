@@ -1,11 +1,14 @@
 
 using System;
 using System.Linq;
+using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
+using Amazon.Lambda.APIGatewayEvents;
 using ServerlessTodo.Models;
 
 namespace ServerlessTodo.Handlers 
@@ -52,6 +55,49 @@ namespace ServerlessTodo.Handlers
 			var results = response.Items.Select(Todo.FromDynamo).ToArray();
 
 			return LambdaResponse<Todo[]>.Ok(results);
+		}
+
+		public async Task<LambdaResponse<CreateResponse>> Create(APIGatewayProxyRequest request) 
+		{
+			var inboundObject = JsonSerializer.Deserialize<Todo>(request?.Body);
+
+			inboundObject.IdRaw = Guid.NewGuid().ToString();
+
+			if (string.IsNullOrWhiteSpace(inboundObject.Summary)) 
+			{
+				return LambdaResponse<CreateResponse>.BadRequest(new CreateResponse 
+				{
+					Success = false,
+					Message = "Failed to create todo item - summary is required."
+				});
+			}
+
+			if (string.IsNullOrWhiteSpace(inboundObject.Description))
+			{
+				inboundObject.Description = inboundObject.Summary;
+			}
+			
+			var insertableObject = Todo.ToDynamo(inboundObject);
+			var client = GetDynamoClient();
+			var todoTableName = GetTodoTableName();
+
+			var dynamoRequest = new PutItemRequest(todoTableName, insertableObject);
+			var putResult = await client.PutItemAsync(dynamoRequest);
+
+			if (putResult.HttpStatusCode != HttpStatusCode.OK) 
+			{
+				return LambdaResponse<CreateResponse>.InternalServerError(new CreateResponse
+				{
+					Success = false,
+					Message = $"Failed to create todo: {putResult.HttpStatusCode.ToString()}"
+				});
+			}
+
+			return LambdaResponse<CreateResponse>.Ok(new CreateResponse
+			{
+				Success = true,
+				Message = "Successfully created item."
+			});
 		}
 	}
 }
